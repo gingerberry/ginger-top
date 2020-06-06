@@ -9,6 +9,6 @@
 
     <servlet-mapping>
         <servlet-name>qrCodeServlet</servlet-name>
-        <url-pattern>/qrCode</url-pattern>
+        <url-pattern>/api/v1/presentation</url-pattern>
     </servlet-mapping>
 </web-app>
