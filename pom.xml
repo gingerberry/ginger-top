@@ -70,6 +70,12 @@
       <artifactId>javassist</artifactId>
       <version>3.25.0-GA</version>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk -->
+    <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk</artifactId>
+      <version>1.11.797</version>
+    </dependency>
   </dependencies>
 
   <build>

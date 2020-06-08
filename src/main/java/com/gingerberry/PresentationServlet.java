@@ -1,6 +1,7 @@
 package com.gingerberry;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,6 +11,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.StringWriter;
 import java.io.PrintWriter;
+import java.io.File;
 
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
@@ -40,12 +42,17 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+
 @WebServlet("/upload")
 @MultipartConfig
 public class PresentationServlet extends HttpServlet {
     private static final long serialVersionUID = -4751096228274971485L;
     private static final int QR_CODE_DIMENSION = 250;
-    private static final int QR_CODE_SCALED_DIMENSION = 250;
+    private static final int QR_CODE_SCALED_DIMENSION = 70;
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -55,14 +62,15 @@ public class PresentationServlet extends HttpServlet {
 
         try {
             XMLSlideShow ppt = this.fileToPPT(fileContent);
-
-            this.addQRCodesToPPT(250, 70, ppt);
-
-            String path = "/Library/Tomcat/";
             String partName = this.getFileName(filePart);
+            int id = 1;
 
-            this.exportPPTtoImages(ppt, path, partName);
-            this.uploadPPT(ppt, path + partName);
+            this.checkExtension(partName);
+
+            this.addQRCodesToPPT(QR_CODE_DIMENSION, QR_CODE_SCALED_DIMENSION, ppt);
+
+            this.uploadPPTAsImagesToS3(ppt, partName, id);
+            this.uploadPPTToS3(ppt, partName, id);
 
             response.getWriter().println("Edited your presentation!");
         } catch (Exception ex) {
@@ -118,21 +126,56 @@ public class PresentationServlet extends HttpServlet {
         }
     }
 
-    private void exportPPTtoImages(XMLSlideShow ppt, String path, String imagePrefix)
+    private void uploadPPTAsImagesToS3(XMLSlideShow ppt, String imagePrefix, int id)
             throws FileNotFoundException, IOException, InterruptedException {
         List<XSLFSlide> slides = ppt.getSlides();
 
+        AmazonS3 s3 = AmazonS3ClientBuilder.standard().withRegion(Regions.US_EAST_1).build();
+
         for (int i = 0; i < slides.size(); i++) {
             BufferedImage img = this.getSlideImage(ppt, slides.get(i));
-            this.saveSlideImageAsPNG(ppt, path + imagePrefix + i + ".png", img);
+
+            String fileName = i + ".png";
+            String keyName = "presentation/" + id + "/" + fileName;
+            String imageName = imagePrefix + fileName;
+
+            this.saveSlideImageAsPNG(ppt, imageName, img);
+
+            s3.putObject("gingerberry", keyName, new File(imageName));
+
+            File file = new File(imageName);
+            file.delete();
         }
     }
 
-    // Should upload a presentation to S3.
-    private void uploadPPT(XMLSlideShow ppt, String fileName) throws IOException {
-        FileOutputStream out = new FileOutputStream(fileName);
+    private void uploadPPTToS3(XMLSlideShow ppt, String fileName, int id) throws IOException, AmazonServiceException {
+        String extension = this.extractExtension(fileName);
+        String fileDest = id + "." + extension;
+        String keyName = "presentation/" + id + "/" + fileDest;
+
+        FileOutputStream out = new FileOutputStream(fileDest);
         ppt.write(out);
         out.close();
+
+        AmazonS3 s3 = AmazonS3ClientBuilder.standard().withRegion(Regions.US_EAST_1).build();
+        s3.putObject("gingerberry", keyName, new File(fileDest));
+
+        File file = new File(fileDest);
+        file.delete();
+    }
+
+    private boolean checkExtension(String fileName) {
+        String extention = this.extractExtension(fileName);
+
+        if (extention == "ppt" || extention == "pptx") {
+            return true;
+        }
+        return false;
+    }
+
+    private String extractExtension(String fileName) {
+        String[] parts = fileName.split(Pattern.quote("."));
+        return parts[parts.length - 1];
     }
 
     private BufferedImage getSlideImage(XMLSlideShow ppt, XSLFSlide slide) {
