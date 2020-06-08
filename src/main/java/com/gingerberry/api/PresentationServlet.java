@@ -1,4 +1,4 @@
-package com.gingerberry;
+package com.gingerberry.api;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -7,8 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.StringWriter;
 import java.io.PrintWriter;
 import java.io.File;
@@ -17,7 +15,6 @@ import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.awt.Graphics2D;
 import java.awt.Color;
-import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
 
@@ -36,16 +33,13 @@ import org.apache.poi.xslf.usermodel.XSLFSlide;
 import org.apache.poi.xslf.usermodel.XSLFPictureData;
 import org.apache.poi.xslf.usermodel.XSLFPictureShape;
 
-import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
-import com.google.zxing.client.j2se.MatrixToImageWriter;
-import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.QRCodeWriter;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.gingerberry.qr.QRCodeGenerator;
 
 @WebServlet("/upload")
 @MultipartConfig
@@ -53,6 +47,8 @@ public class PresentationServlet extends HttpServlet {
     private static final long serialVersionUID = -4751096228274971485L;
     private static final int QR_CODE_DIMENSION = 250;
     private static final int QR_CODE_SCALED_DIMENSION = 70;
+
+    private QRCodeGenerator qrGenerator;
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -85,7 +81,7 @@ public class PresentationServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        System.out.println("Servlet " + this.getServletName() + " has started");
+        this.qrGenerator = new QRCodeGenerator();
     }
 
     @Override
@@ -115,7 +111,7 @@ public class PresentationServlet extends HttpServlet {
 
         for (int i = 0; i < slides.size(); i++) {
             String qrCodeData = "venko-e-aljirski-zatvornik-" + i;
-            byte[] pictureData = this.getQR(qrCodeData);
+            byte[] pictureData = this.qrGenerator.getQR(qrCodeData, qrCodeDimension, qrCodeScaledDimension);
 
             // Adding the image to the presentation.
             XSLFPictureData idx = ppt.addPicture(pictureData, XSLFPictureData.PictureType.PNG);
@@ -200,35 +196,5 @@ public class PresentationServlet extends HttpServlet {
 
         System.out.println("Image " + name + "successfully created");
         out.close();
-    }
-
-    private byte[] getQR(String text) throws IOException, WriterException {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        QRCodeWriter qrCodeWriter = new QRCodeWriter();
-        BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, QR_CODE_DIMENSION, QR_CODE_DIMENSION);
-        MatrixToImageWriter.writeToStream(bitMatrix, "png", stream);
-        stream.flush();
-        byte[] data = this.scale(stream.toByteArray(), QR_CODE_SCALED_DIMENSION, QR_CODE_SCALED_DIMENSION);
-
-        return data;
-    }
-
-    private byte[] scale(byte[] fileData, int width, int height) throws IOException {
-        InputStream in = new ByteArrayInputStream(fileData);
-        BufferedImage image = ImageIO.read(in);
-
-        Image tmp = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-        BufferedImage resized = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2d = resized.createGraphics();
-        g2d.drawImage(tmp, 0, 0, null);
-        g2d.dispose();
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ImageIO.write(resized, "png", baos);
-        baos.flush();
-        byte[] imageInBytes = baos.toByteArray();
-        baos.close();
-
-        return imageInBytes;
     }
 }

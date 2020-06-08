@@ -3,7 +3,7 @@
     <display-name>Gingerberry presentation writer</display-name>
     <servlet>
         <servlet-name>presentationServlet</servlet-name>
-        <servlet-class>com.gingerberry.PresentationServlet</servlet-class>
+        <servlet-class>com.gingerberry.api.PresentationServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
 
