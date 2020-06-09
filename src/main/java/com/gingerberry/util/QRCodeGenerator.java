@@ -1,4 +1,4 @@
-package com.gingerberry.qr;
+package com.gingerberry.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
