@@ -2,6 +2,9 @@ package com.gingerberry.api;
 
 import com.gingerberry.util.Presentation;
 import com.gingerberry.util.QRCodeGenerator;
+import com.gingerberry.db.DB;
+
+import java.sql.Connection;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,6 +27,7 @@ public class PresentationServlet extends HttpServlet {
     private static final int QR_CODE_SCALED_DIMENSION = 70;
 
     private QRCodeGenerator qrGenerator;
+    private Connection dbConn;
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -34,15 +38,14 @@ public class PresentationServlet extends HttpServlet {
         try {
             String partName = this.getFileName(filePart);
             Presentation ppt = new Presentation(this.qrGenerator, fileContent, partName);
-            
-            // TODO: generate
-            int id = 1;
+
+            ppt.insertPresentationsIntoDB(dbConn);
 
             ppt.addQRCodesToPPT(QR_CODE_DIMENSION, QR_CODE_SCALED_DIMENSION);
-            ppt.uploadPPTAsImagesToS3(partName, id);
-            ppt.uploadPPTToS3(partName, id);
+            ppt.uploadPPTAsImagesToS3(partName);
+            ppt.uploadPPTToS3(partName);
 
-            response.getWriter().println("Edited your presentation!");
+            response.getWriter().println("Edited your presentation with id " + ppt.getID());
         } catch (Exception ex) {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
@@ -55,7 +58,14 @@ public class PresentationServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        this.qrGenerator = new QRCodeGenerator();
+        try {
+            this.qrGenerator = new QRCodeGenerator();
+
+            DB db = DB.getInstance();
+            this.dbConn = db.getConnection();
+        } catch (Exception ex) {
+            throw new ServletException(ex.getMessage());
+        }
     }
 
     @Override

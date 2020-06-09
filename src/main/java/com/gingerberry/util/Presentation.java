@@ -9,6 +9,11 @@ import java.io.FileNotFoundException;
 import java.io.File;
 import java.io.FileOutputStream;
 
+import java.sql.Connection;
+import java.sql.Statement;
+import java.sql.ResultSet;
+import java.sql.PreparedStatement;
+
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.Graphics2D;
@@ -33,11 +38,14 @@ import com.amazonaws.AmazonServiceException;
 public class Presentation {
     private QRCodeGenerator qrGenerator;
     private XMLSlideShow ppt;
+    private String name;
+    private int id;
 
     public Presentation(QRCodeGenerator qrGenerator, InputStream fileContent, String fileName) throws Exception {
         this.qrGenerator = qrGenerator;
 
         this.checkExtension(fileName);
+        this.name = fileName;
 
         this.ppt = this.fileToPPT(fileContent);
     }
@@ -59,7 +67,7 @@ public class Presentation {
         }
     }
 
-    public void uploadPPTAsImagesToS3(String imagePrefix, int id)
+    public void uploadPPTAsImagesToS3(String imagePrefix)
             throws FileNotFoundException, IOException, InterruptedException {
         List<XSLFSlide> slides = ppt.getSlides();
 
@@ -81,7 +89,7 @@ public class Presentation {
         }
     }
 
-    public void uploadPPTToS3(String fileName, int id) throws IOException, AmazonServiceException {
+    public void uploadPPTToS3(String fileName) throws IOException, AmazonServiceException {
         String extension = this.extractExtension(fileName);
         String fileDest = id + "." + extension;
         String keyName = "presentation/" + id + "/" + fileDest;
@@ -101,8 +109,29 @@ public class Presentation {
         String extension = this.extractExtension(fileName);
 
         if (!extension.equals("ppt") && !extension.equals("pptx")) {
-            throw new Exception("Only .ppt and .pptx files are supported! Extension is " + extension + " filename " + fileName);
+            throw new Exception(
+                    "Only .ppt and .pptx files are supported! Extension is " + extension + " filename " + fileName);
         }
+    }
+
+    public void insertPresentationsIntoDB(Connection dbConn) throws Exception {
+        String query = "INSERT INTO presentations (presentation_name) VALUES (?)";
+
+        PreparedStatement stmt = dbConn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+        stmt.setString(1, this.name);
+
+        stmt.executeUpdate();
+        ResultSet generatedKeys = stmt.getGeneratedKeys();
+
+        if (!generatedKeys.next()) {
+            throw new Exception("Error inserting!");
+        }
+
+        this.id = (int) generatedKeys.getLong(1);
+    }
+
+    public int getID() {
+        return id;
     }
 
     private XMLSlideShow fileToPPT(InputStream file) throws IOException {
