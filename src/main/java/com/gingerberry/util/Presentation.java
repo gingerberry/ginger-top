@@ -28,8 +28,6 @@ import org.apache.poi.xslf.usermodel.XSLFSlide;
 import org.apache.poi.xslf.usermodel.XSLFPictureData;
 import org.apache.poi.xslf.usermodel.XSLFPictureShape;
 
-import com.google.zxing.WriterException;
-
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
@@ -50,12 +48,16 @@ public class Presentation {
         this.ppt = this.fileToPPT(fileContent);
     }
 
-    public void addQRCodesToPPT(int qrCodeDimension, int qrCodeScaledDimension)
-            throws FileNotFoundException, IOException, InterruptedException, WriterException {
+    public void addQRCodesToPPT(int qrCodeDimension, int qrCodeScaledDimension) throws Exception {
         List<XSLFSlide> slides = ppt.getSlides();
 
+        if (this.id == 0) {
+            throw new Exception("The presentation hasn't been inserted into the DB.");
+        }
+
         for (int i = 0; i < slides.size(); i++) {
-            String qrCodeData = "venko-e-aljirski-zatvornik-" + i;
+            String frontEndURL = "venko-e-aljirski-zatvornik.com";
+            String qrCodeData = frontEndURL + "/presentation/" + this.id + "/slide/" + i;
             byte[] pictureData = this.qrGenerator.getQR(qrCodeData, qrCodeDimension, qrCodeScaledDimension);
 
             // Adding the image to the presentation.
