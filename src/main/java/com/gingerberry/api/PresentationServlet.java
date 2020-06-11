@@ -45,6 +45,7 @@ public class PresentationServlet extends HttpServlet {
             ppt.uploadPPTToS3(partName);
 
             response.addHeader("Access-Control-Allow-Origin", "*");
+            response.addHeader("Access-Control-Allow-Credentials", "true");
 
             response.getWriter().println("Edited your presentation with id " + ppt.getID());
         } catch (Exception ex) {
@@ -60,8 +61,9 @@ public class PresentationServlet extends HttpServlet {
             throws ServletException, IOException {
             response.addHeader("Access-Control-Allow-Origin", "*");
             response.addHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, HEAD");
+            response.addHeader("Access-Control-Allow-Credentials", "true");
             response.addHeader("Access-Control-Allow-Headers",
-                    "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept, access-control-allow-origin");
+                    "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
             response.addHeader("Access-Control-Max-Age", "1728000");
     }
 
