@@ -22,7 +22,7 @@ import javax.servlet.http.HttpServletResponse;
 @MultipartConfig
 public class PresentationServlet extends HttpServlet {
     private static final long serialVersionUID = -4751096228274971485L;
-    private static final int QR_CODE_DIMENSION = 250;
+    private static final int QR_CODE_DIMENSION = 70;
     private static final int QR_CODE_SCALED_DIMENSION = 70;
 
     private QRCodeGenerator qrGenerator;

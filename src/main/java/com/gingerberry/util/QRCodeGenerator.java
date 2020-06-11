@@ -36,7 +36,7 @@ public class QRCodeGenerator {
         InputStream in = new ByteArrayInputStream(fileData);
         BufferedImage image = ImageIO.read(in);
 
-        Image tmp = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+        Image tmp = image.getScaledInstance(width, height, Image.SCALE_REPLICATE);
         BufferedImage resized = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = resized.createGraphics();
         g2d.drawImage(tmp, 0, 0, null);
