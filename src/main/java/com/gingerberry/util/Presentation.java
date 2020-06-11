@@ -56,8 +56,7 @@ public class Presentation {
         }
 
         for (int i = 0; i < slides.size(); i++) {
-            String frontEndURL = "venko-e-aljirski-zatvornik.com";
-            String qrCodeData = frontEndURL + "/presentation/" + this.id + "/slide/" + i;
+            String qrCodeData = String.valueOf(i);
             byte[] pictureData = this.qrGenerator.getQR(qrCodeData, qrCodeDimension, qrCodeScaledDimension);
 
             // Adding the image to the presentation.
