@@ -137,22 +137,21 @@ public class Presentation {
     }
 
     private void insertPresentationSlides(Connection dbConn, int presentationID) throws Exception {
-        String query = "INSERT INTO slides (presentation_id, serial_num, title) VALUES (?, ?, ?)";
+        String query = "INSERT INTO slides (presentation_id, title) VALUES (?, ?)";
         PreparedStatement stmt = dbConn.prepareStatement(query);
 
         List<XSLFSlide> slides = ppt.getSlides();
 
         for (int i = 0; i < slides.size(); i++) {
             stmt.setInt(1, presentationID);
-            stmt.setInt(2, i);
-            
+
             String title = slides.get(i).getTitle();
 
             if (title == null) {
-                title = "slide кирилица #" + i;
+                title = "Слайд #" + i;
             }
 
-            stmt.setString(3, title);
+            stmt.setString(2, title);
 
             stmt.executeUpdate();
         }
