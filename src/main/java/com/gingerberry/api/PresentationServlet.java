@@ -8,8 +8,6 @@ import java.sql.Connection;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
-import java.io.PrintWriter;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -18,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.Part;
+import javax.servlet.http.HttpServletResponse;
 
 @WebServlet("/upload")
 @MultipartConfig
@@ -39,21 +38,31 @@ public class PresentationServlet extends HttpServlet {
             String partName = this.getFileName(filePart);
             Presentation ppt = new Presentation(this.qrGenerator, fileContent, partName);
 
-            ppt.insertPresentationsIntoDB(dbConn);
+            ppt.insertIntoDB(dbConn);
 
             ppt.addQRCodesToPPT(QR_CODE_DIMENSION, QR_CODE_SCALED_DIMENSION);
             ppt.uploadPPTAsImagesToS3(partName);
             ppt.uploadPPTToS3(partName);
 
+            response.addHeader("Access-Control-Allow-Origin", "*");
+
             response.getWriter().println("Edited your presentation with id " + ppt.getID());
         } catch (Exception ex) {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            ex.printStackTrace(pw);
-            response.getWriter().println("We failed!" + sw);
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().println("Error: " + ex.getMessage());
         } finally {
             fileContent.close();
         }
+    }
+
+    @Override
+    protected void doOptions(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+            response.addHeader("Access-Control-Allow-Origin", "*");
+            response.addHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, HEAD");
+            response.addHeader("Access-Control-Allow-Headers",
+                    "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept, access-control-allow-origin");
+            response.addHeader("Access-Control-Max-Age", "1728000");
     }
 
     @Override

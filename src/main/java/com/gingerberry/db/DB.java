@@ -18,7 +18,7 @@ public class DB {
         String dbName = "gingerberry";
         String dbEndpoint = "gingerberry.cwch0ro4xne5.us-east-1.rds.amazonaws.com";
         String jdbcURL = "jdbc:mysql://" + dbEndpoint + "/" + dbName + "?user=" + username + "&password="
-                + password;
+                + password + "&characterEncoding=UTF-8";
 
         Class.forName("com.mysql.jdbc.Driver");
         conn = DriverManager.getConnection(jdbcURL);

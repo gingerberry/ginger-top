@@ -116,10 +116,15 @@ public class Presentation {
         }
     }
 
-    public void insertPresentationsIntoDB(Connection dbConn) throws Exception {
-        String query = "INSERT INTO presentations (presentation_name) VALUES (?)";
+    public void insertIntoDB(Connection dbConn) throws Exception {
+        this.insertPresentationsIntoDB(dbConn);
+        this.insertPresentationSlides(dbConn, this.id);
+    }
 
+    private void insertPresentationsIntoDB(Connection dbConn) throws Exception {
+        String query = "INSERT INTO presentations (presentation_name) VALUES (?)";
         PreparedStatement stmt = dbConn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+
         stmt.setString(1, this.name);
 
         stmt.executeUpdate();
@@ -130,6 +135,28 @@ public class Presentation {
         }
 
         this.id = (int) generatedKeys.getLong(1);
+    }
+
+    private void insertPresentationSlides(Connection dbConn, int presentationID) throws Exception {
+        String query = "INSERT INTO slides (presentation_id, serial_num, title) VALUES (?, ?, ?)";
+        PreparedStatement stmt = dbConn.prepareStatement(query);
+
+        List<XSLFSlide> slides = ppt.getSlides();
+
+        for (int i = 0; i < slides.size(); i++) {
+            stmt.setInt(1, presentationID);
+            stmt.setInt(2, i);
+            
+            String title = slides.get(i).getTitle();
+
+            if (title == null) {
+                title = "slide кирилица #" + i;
+            }
+
+            stmt.setString(3, title);
+
+            stmt.executeUpdate();
+        }
     }
 
     public int getID() {
