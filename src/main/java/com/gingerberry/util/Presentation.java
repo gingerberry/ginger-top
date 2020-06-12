@@ -29,9 +29,11 @@ import org.apache.poi.xslf.usermodel.XSLFPictureData;
 import org.apache.poi.xslf.usermodel.XSLFPictureShape;
 
 import com.amazonaws.regions.Regions;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.AmazonServiceException;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
 
 public class Presentation {
     private QRCodeGenerator qrGenerator;
@@ -83,7 +85,8 @@ public class Presentation {
 
             this.saveSlideImageAsPNG(ppt, imageName, img);
 
-            s3.putObject("gingerberry", keyName, new File(imageName));
+            s3.putObject(new PutObjectRequest("gingerberry", keyName, new File(imageName))
+                    .withCannedAcl(CannedAccessControlList.PublicRead));
 
             File file = new File(imageName);
             file.delete();
@@ -100,7 +103,8 @@ public class Presentation {
         out.close();
 
         AmazonS3 s3 = AmazonS3ClientBuilder.standard().withRegion(Regions.US_EAST_1).build();
-        s3.putObject("gingerberry", keyName, new File(fileDest));
+        s3.putObject(new PutObjectRequest("gingerberry", keyName, new File(fileDest))
+                    .withCannedAcl(CannedAccessControlList.PublicRead));
 
         File file = new File(fileDest);
         file.delete();
