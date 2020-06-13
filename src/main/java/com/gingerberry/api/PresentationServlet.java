@@ -72,7 +72,7 @@ public class PresentationServlet extends HttpServlet {
         response.addHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, HEAD");
         response.addHeader("Access-Control-Allow-Credentials", "true");
         response.addHeader("Access-Control-Allow-Headers",
-                "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+                "Origin, Content-Type, Access-Control-Allow-Headers, Accept, Authorization, X-Requested-With");
         response.addHeader("Access-Control-Max-Age", "1728000");
     }
 
