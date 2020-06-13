@@ -2,6 +2,7 @@ package com.gingerberry.api;
 
 import com.gingerberry.util.Presentation;
 import com.gingerberry.util.QRCodeGenerator;
+import com.gingerberry.api.model.response.PresentationUploadResponse;
 import com.gingerberry.db.DB;
 
 import java.sql.Connection;
@@ -17,6 +18,8 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.Part;
 import javax.servlet.http.HttpServletResponse;
+
+import com.google.gson.Gson;
 
 @WebServlet("/upload")
 @MultipartConfig
@@ -47,7 +50,13 @@ public class PresentationServlet extends HttpServlet {
             response.addHeader("Access-Control-Allow-Origin", "*");
             response.addHeader("Access-Control-Allow-Credentials", "true");
 
-            response.getWriter().println("Edited your presentation with id " + ppt.getID());
+            PresentationUploadResponse uploadResp = new PresentationUploadResponse(ppt.getID());
+            Gson gson = new Gson();
+
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+
+            response.getWriter().println(gson.toJson(uploadResp));
         } catch (Exception ex) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().println("Error: " + ex.getMessage());
@@ -59,12 +68,12 @@ public class PresentationServlet extends HttpServlet {
     @Override
     protected void doOptions(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-            response.addHeader("Access-Control-Allow-Origin", "*");
-            response.addHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, HEAD");
-            response.addHeader("Access-Control-Allow-Credentials", "true");
-            response.addHeader("Access-Control-Allow-Headers",
-                    "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
-            response.addHeader("Access-Control-Max-Age", "1728000");
+        response.addHeader("Access-Control-Allow-Origin", "*");
+        response.addHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, HEAD");
+        response.addHeader("Access-Control-Allow-Credentials", "true");
+        response.addHeader("Access-Control-Allow-Headers",
+                "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+        response.addHeader("Access-Control-Max-Age", "1728000");
     }
 
     @Override
