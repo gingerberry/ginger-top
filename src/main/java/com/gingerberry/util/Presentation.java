@@ -11,6 +11,11 @@ import java.io.FileNotFoundException;
 import java.io.File;
 import java.io.FileOutputStream;
 
+import java.nio.file.Files;
+import java.nio.file.attribute.UserPrincipal;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.ResultSet;
@@ -213,10 +218,25 @@ public class Presentation {
         return parts[parts.length - 1];
     }
 
-    private String createDirectory() {
-        String fileDir = Config.LOCAL_STORAGE + "presentation/" + id + "/";
-        new File(fileDir).mkdirs();
+    private String createDirectory() throws IOException {
+        Path path = Paths.get(Config.LOCAL_STORAGE);
+        UserPrincipal owner = Files.getOwner(path);
 
-        return fileDir;
+
+        Path presentationPath = Paths.get(Config.LOCAL_STORAGE + "presentation/");
+        File presentationDir = new File(presentationPath.toString());
+        presentationDir.setWritable(true, false);
+        presentationDir.setReadable(true, false);
+        presentationDir.mkdirs();
+        Files.setOwner(presentationPath, owner);
+
+        Path filePath = Paths.get(presentationPath.toString() + "/" + id + "/");
+        File fileDir = new File(filePath.toString());
+        fileDir.setWritable(true, false);
+        fileDir.setReadable(true, false);
+        fileDir.mkdirs();
+        Files.setOwner(filePath, owner);
+
+        return Config.LOCAL_STORAGE + "presentation/" + id + "/";
     }
 }
