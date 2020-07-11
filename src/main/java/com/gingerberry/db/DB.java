@@ -1,5 +1,7 @@
 package com.gingerberry.db;
 
+import com.gingerberry.Config;
+
 import java.lang.Class;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -13,12 +15,9 @@ public class DB {
     private Connection conn;
 
     private DB() throws ClassNotFoundException, SQLException {
-        String username = "admin";
-        String password = "gingerberry";
-        String dbName = "gingerberry";
-        String dbEndpoint = "gingerberry.cwch0ro4xne5.us-east-1.rds.amazonaws.com";
-        String jdbcURL = "jdbc:mysql://" + dbEndpoint + "/" + dbName + "?user=" + username + "&password="
-                + password + "&characterEncoding=UTF-8";
+        String jdbcURL = "jdbc:mysql://" + Config.DB_HOST + "/" + Config.DB_NAME + "?user=" + Config.DB_USR
+                + "&password=" + Config.DB_PWD
+                + "&characterEncoding=UTF-8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
 
         Class.forName("com.mysql.jdbc.Driver");
         conn = DriverManager.getConnection(jdbcURL);
