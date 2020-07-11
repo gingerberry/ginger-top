@@ -1,5 +1,7 @@
 package com.gingerberry.util;
 
+import com.gingerberry.Config;
+
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -28,7 +30,6 @@ import org.apache.poi.xslf.usermodel.XSLFSlide;
 import org.apache.poi.xslf.usermodel.XSLFPictureData;
 import org.apache.poi.xslf.usermodel.XSLFPictureShape;
 
-import com.amazonaws.regions.Regions;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
@@ -70,44 +71,58 @@ public class Presentation {
         }
     }
 
-    public void uploadPPTAsImagesToS3(String imagePrefix)
+    public void uploadPPTAsImagesToStorage(String imagePrefix)
             throws FileNotFoundException, IOException, InterruptedException {
         List<XSLFSlide> slides = ppt.getSlides();
-
-        AmazonS3 s3 = AmazonS3ClientBuilder.standard().withRegion(Regions.US_EAST_1).build();
 
         for (int i = 0; i < slides.size(); i++) {
             BufferedImage img = this.getSlideImage(ppt, slides.get(i));
 
             String fileName = i + ".png";
-            String keyName = "presentation/" + id + "/" + fileName;
-            String imageName = imagePrefix + fileName;
 
-            this.saveSlideImageAsPNG(ppt, imageName, img);
+            if (!Config.S3_BUCKET_NAME.equals("")) {
+                String keyName = "presentation/" + id + "/" + fileName;
+                String imageName = imagePrefix + fileName;
 
-            s3.putObject(new PutObjectRequest("gingerberry", keyName, new File(imageName))
-                    .withCannedAcl(CannedAccessControlList.PublicRead));
+                this.saveSlideImageAsPNG(ppt, imageName, img);
 
-            File file = new File(imageName);
-            file.delete();
+                AmazonS3 s3 = AmazonS3ClientBuilder.standard().withRegion(Config.S3_REGION).build();
+                s3.putObject(new PutObjectRequest(Config.S3_BUCKET_NAME, keyName, new File(imageName))
+                        .withCannedAcl(CannedAccessControlList.PublicRead));
+
+                File file = new File(imageName);
+                file.delete();
+            } else {
+                String fileDir = createDirectory();
+                this.saveSlideImageAsPNG(ppt, fileDir + fileName, img);
+            }
         }
     }
 
-    public void uploadPPTToS3(String fileName) throws IOException, AmazonServiceException {
+    public void uploadPPTToStorage(String fileName) throws IOException, AmazonServiceException {
         String extension = this.extractExtension(fileName);
-        String fileDest = id + "." + extension;
-        String keyName = "presentation/" + id + "/" + fileDest;
+        String baseFileName = id + "." + extension;
 
-        FileOutputStream out = new FileOutputStream(fileDest);
-        ppt.write(out);
-        out.close();
+        if (!Config.S3_BUCKET_NAME.equals("")) {
+            String keyName = "presentation/" + id + "/" + baseFileName;
 
-        AmazonS3 s3 = AmazonS3ClientBuilder.standard().withRegion(Regions.US_EAST_1).build();
-        s3.putObject(new PutObjectRequest("gingerberry", keyName, new File(fileDest))
+            FileOutputStream out = new FileOutputStream(baseFileName);
+            ppt.write(out);
+            out.close();
+
+            AmazonS3 s3 = AmazonS3ClientBuilder.standard().withRegion(Config.S3_REGION).build();
+            s3.putObject(new PutObjectRequest(Config.S3_BUCKET_NAME, keyName, new File(baseFileName))
                     .withCannedAcl(CannedAccessControlList.PublicRead));
 
-        File file = new File(fileDest);
-        file.delete();
+            File file = new File(baseFileName);
+            file.delete();
+        } else {
+            String fileDir = createDirectory();
+
+            FileOutputStream out = new FileOutputStream(fileDir + baseFileName);
+            ppt.write(out);
+            out.close();
+        }
     }
 
     public void checkExtension(String fileName) throws Exception {
@@ -196,5 +211,12 @@ public class Presentation {
     private String extractExtension(String fileName) {
         String[] parts = fileName.split(Pattern.quote("."));
         return parts[parts.length - 1];
+    }
+
+    private String createDirectory() {
+        String fileDir = Config.LOCAL_STORAGE + "presentation/" + id + "/";
+        new File(fileDir).mkdirs();
+
+        return fileDir;
     }
 }

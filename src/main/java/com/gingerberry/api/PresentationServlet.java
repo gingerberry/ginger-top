@@ -43,8 +43,8 @@ public class PresentationServlet extends HttpServlet {
             ppt.insertIntoDB(dbConn);
 
             ppt.addQRCodesToPPT(QR_CODE_DIMENSION, QR_CODE_SCALED_DIMENSION);
-            ppt.uploadPPTAsImagesToS3(partName);
-            ppt.uploadPPTToS3(partName);
+            ppt.uploadPPTAsImagesToStorage(partName);
+            ppt.uploadPPTToStorage(partName);
 
             response.addHeader("Access-Control-Allow-Origin", "*");
             response.addHeader("Access-Control-Allow-Credentials", "true");
