@@ -219,9 +219,22 @@ public class Presentation {
     }
 
     private String createDirectory() throws IOException {
+        String os = System.getProperty("os.name");
+        if (os.matches("(.*)Windows(.*)")) {
+            Path path = Paths.get(Config.LOCAL_STORAGE);
+            Path presentationPath = Paths.get(Config.LOCAL_STORAGE + "presentation" + File.separator);
+            File presentationDir = new File(presentationPath.toString());
+            presentationDir.mkdirs();
+
+            Path filePath = Paths.get(presentationPath.toString() + File.separator + id + File.separator);
+            File fileDir = new File(filePath.toString());
+            fileDir.mkdirs();
+            
+            return Config.LOCAL_STORAGE + "presentation" + File.separator + id + File.separator;
+        }
+
         Path path = Paths.get(Config.LOCAL_STORAGE);
         UserPrincipal owner = Files.getOwner(path);
-
         Path presentationPath = Paths.get(Config.LOCAL_STORAGE + "presentation" + File.separator);
         File presentationDir = new File(presentationPath.toString());
         presentationDir.setWritable(true, false);
