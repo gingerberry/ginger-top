@@ -222,21 +222,20 @@ public class Presentation {
         Path path = Paths.get(Config.LOCAL_STORAGE);
         UserPrincipal owner = Files.getOwner(path);
 
-
-        Path presentationPath = Paths.get(Config.LOCAL_STORAGE + "presentation/");
+        Path presentationPath = Paths.get(Config.LOCAL_STORAGE + "presentation" + File.separator);
         File presentationDir = new File(presentationPath.toString());
         presentationDir.setWritable(true, false);
         presentationDir.setReadable(true, false);
         presentationDir.mkdirs();
         Files.setOwner(presentationPath, owner);
 
-        Path filePath = Paths.get(presentationPath.toString() + "/" + id + "/");
+        Path filePath = Paths.get(presentationPath.toString() + File.separator + id + File.separator);
         File fileDir = new File(filePath.toString());
         fileDir.setWritable(true, false);
         fileDir.setReadable(true, false);
         fileDir.mkdirs();
         Files.setOwner(filePath, owner);
 
-        return Config.LOCAL_STORAGE + "presentation/" + id + "/";
+        return Config.LOCAL_STORAGE + "presentation" + File.separator + id + File.separator;
     }
 }
